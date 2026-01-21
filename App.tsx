@@ -1,10 +1,16 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { processResonance } from './services/geminiService';
-import { validateToken, logout } from './services/authService';
-import supabaseService from './services/supabaseServiceComplete';
+import { createClient } from '@supabase/supabase-js';
+import { getUserProfile, updateUserProfile, getResonanceHistory, addResonanceHistory, incrementResonanceCount, searchUsers, getUserGallery, addGalleryItem } from './services/supabaseService';
 import { HistoryItem, UserProfile, UserSettings, EchoProfile, GalleryItem, Comment, MediaFile, PremiumSettings, Dynasty, DynastyRole, DynastyMessage, Group, Participation, AuthUser, AuthState, UserData } from './types';
 import ResonanceVisualizer from './components/ResonanceVisualizer';
 import LoginForm from './components/LoginForm';
+
+// Cliente Supabase
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL || 'https://dbqavikwfalegfstceqr.supabase.co',
+  process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRicWF2aWt3ZmFsZWdmc3RjZXFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5MzkxNzEsImV4cCI6MjA4NDUxNTE3MX0.EcpsrbVh8nojK1exOK6a-OKofAQJ_BJ9jSt82ZTBaSc'
+);
 
 type TabType = 'Núcleo' | 'Feed' | 'Mensagens' | 'Participações' | 'Dinastia' | 'Perfil' | 'Configurações';
 type DynastyTab = 'Geral' | 'Feed' | 'Chat' | 'Gerenciar';
@@ -66,7 +72,7 @@ const App: React.FC = () => {
         setIsDataLoading(true);
         try {
           // Carregar perfil do Supabase
-          const profile = await supabaseService.getUserProfile(authState.user.id);
+          const profile = await getUserProfile(authState.user.id);
           if (profile) {
             setUserData({
               profile: {
@@ -314,7 +320,7 @@ const App: React.FC = () => {
       setSearchResults([]);
       return;
     }
-    
+
     try {
       const results = await searchUsers(query);
       setSearchResults(results);
@@ -322,7 +328,7 @@ const App: React.FC = () => {
       console.error('Error searching users:', error);
       setSearchResults([]);
     }
-  }, []);
+  }, [searchUsers]);
 
   // Debounce para busca
   useEffect(() => {
@@ -592,7 +598,7 @@ const App: React.FC = () => {
     const updatedProfile = { ...profile, name: tempProfile.name, bio: tempProfile.bio };
     setProfile(updatedProfile);
     
-    // Salvar no servidor se autenticado
+    // Salvar no Supabase
     if (authState.user) {
       await updateUserProfile(authState.user.id, {
         name: tempProfile.name,
@@ -620,7 +626,7 @@ const App: React.FC = () => {
       };
 
       // Salvar no Supabase
-      await supabaseService.addGalleryItem(authState.user.id, newPost);
+      await addGalleryItem(authState.user.id, newPost);
       
       // Atualizar estado local
       setProfile(prev => ({
