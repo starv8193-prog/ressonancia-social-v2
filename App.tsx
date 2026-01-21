@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { processResonance } from './services/geminiService';
 import { validateToken, logout } from './services/authService';
-import { loadUserData, saveUserData, updateProfile, updateSettings, addToHistory, incrementResonanceCount, searchUsers, getUserProfile, registerUserProfile } from './services/userDataService';
+import { getUserProfile, updateUserProfile, getResonanceHistory, addResonanceHistory, incrementResonanceCount, searchUsers, getUserGallery, addGalleryItem } from './services/supabaseService';
 import { HistoryItem, UserProfile, UserSettings, EchoProfile, GalleryItem, Comment, MediaFile, PremiumSettings, Dynasty, DynastyRole, DynastyMessage, Group, Participation, AuthUser, AuthState, UserData } from './types';
 import ResonanceVisualizer from './components/ResonanceVisualizer';
 import LoginForm from './components/LoginForm';
@@ -65,12 +65,46 @@ const App: React.FC = () => {
       if (authState.isAuthenticated && authState.user) {
         setIsDataLoading(true);
         try {
-          const response = await loadUserData(authState.user.id);
-          if (response.success && response.data) {
-            setUserData(response.data);
+          // Carregar perfil do Supabase
+          const profile = await getUserProfile(authState.user.id);
+          if (profile) {
+            setUserData({
+              profile: {
+                name: profile.name,
+                bio: profile.bio,
+                avatarUrl: profile.avatarUrl,
+                bannerUrl: 'https://images.unsplash.com/photo-1464802686167-b939a6910659?w=1200&h=400&fit=crop',
+                isPremium: false,
+                premiumSettings: {
+                  borderColor: '#ffffff',
+                  profileColor: profile.avatarColor || '#ffffff',
+                  appColor: '#ffffff',
+                  nameColor: '#ffffff',
+                  borderType: 'solid',
+                  profileType: 'solid',
+                  nameType: 'solid'
+                },
+                followers: [],
+                following: [],
+                gallery: [],
+                groups: []
+              },
+              settings: {
+                isPublic: profile.isPublic,
+                allowMessages: true,
+                allowGroups: true,
+                allowDynastyInvites: true
+              },
+              gallery: [],
+              history: [],
+              followers: [],
+              following: [],
+              resonanceCount: 0,
+              lastActive: Date.now()
+            });
           }
         } catch (error) {
-          console.error('Error loading user data:', error);
+          console.error('Error loading user data on login:', error);
         } finally {
           setIsDataLoading(false);
         }
