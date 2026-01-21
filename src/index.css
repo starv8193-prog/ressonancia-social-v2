@@ -1,0 +1,132 @@
+/* Estilos base da aplicação */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #050505;
+  color: #e5e5e5;
+  overflow-x: hidden;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 10px;
+}
+
+/* Estilos específicos dos componentes */
+.nav-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  overflow-x: auto;
+  scrollbar-hide: ;
+}
+
+/* Botões e elementos interativos */
+.btn-primary {
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 9999px;
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2);
+}
+
+.input-field {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  color: #e5e5e5;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+/* Cards e containers */
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.glassic-text {
+  color: #e5e5e5;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.text-muted {
+  color: #a0a0a0;
+}
+
+/* Animações e transições */
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+.scale-105 {
+  transform: scale(1.05);
+}
+
+/* Layout responsivo */
+@media (max-width: 768px) {
+  .btn-primary {
+    padding: 10px 20px;
+    font-size: 9px;
+  }
+  
+  .input-field {
+    padding: 12px;
+    font-size: 14px;
+  }
+}
