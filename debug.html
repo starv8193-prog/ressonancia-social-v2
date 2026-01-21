@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Supabase</title>
+</head>
+<body>
+    <h1>Teste de Conexão Supabase</h1>
+    <button onclick="testConnection()">Testar Conexão</button>
+    <div id="result"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const supabaseUrl = 'https://dbqavikwfaelegfstceqr.supabase.co'
+        const supabaseAnonKey = 'sb_publishable_XF-NoDOQoMiEUV39jPSnnw_IOYxSS7B'
+        
+        console.log('Config:', { supabaseUrl, hasKey: !!supabaseAnonKey })
+        
+        const supabase = createClient(supabaseUrl, supabaseAnonKey)
+        
+        async function testConnection() {
+            const result = document.getElementById('result')
+            result.innerHTML = 'Testando...'
+            
+            try {
+                // Testar auth
+                console.log('Testando auth...')
+                const { data, error } = await supabase.auth.getSession()
+                
+                if (error) {
+                    console.error('Erro auth:', error)
+                    result.innerHTML = `Erro: ${error.message}`
+                } else {
+                    console.log('Auth OK:', data)
+                    result.innerHTML = 'Conexão bem-sucedida!'
+                }
+                
+                // Testar signup
+                console.log('Testando signup...')
+                const { data: signupData, error: signupError } = await supabase.auth.signUp({
+                    email: 'test@example.com',
+                    password: 'test123456'
+                })
+                
+                if (signupError) {
+                    console.error('Erro signup:', signupError)
+                    result.innerHTML += `<br>Signup: ${signupError.message}`
+                } else {
+                    console.log('Signup OK:', signupData)
+                    result.innerHTML += '<br>Signup OK!'
+                }
+                
+            } catch (err) {
+                console.error('Erro geral:', err)
+                result.innerHTML = `Erro: ${err.message}`
+            }
+        }
+    </script>
+</body>
+</html>
