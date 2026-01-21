@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { processResonance } from './services/geminiService';
 import { validateToken, logout } from './services/authService';
-import { getUserProfile, updateUserProfile, getResonanceHistory, addResonanceHistory, incrementResonanceCount, searchUsers, getUserGallery, addGalleryItem } from './services/supabaseService';
+import supabaseService from './services/supabaseServiceComplete';
 import { HistoryItem, UserProfile, UserSettings, EchoProfile, GalleryItem, Comment, MediaFile, PremiumSettings, Dynasty, DynastyRole, DynastyMessage, Group, Participation, AuthUser, AuthState, UserData } from './types';
 import ResonanceVisualizer from './components/ResonanceVisualizer';
 import LoginForm from './components/LoginForm';
@@ -66,7 +66,7 @@ const App: React.FC = () => {
         setIsDataLoading(true);
         try {
           // Carregar perfil do Supabase
-          const profile = await getUserProfile(authState.user.id);
+          const profile = await supabaseService.getUserProfile(authState.user.id);
           if (profile) {
             setUserData({
               profile: {
@@ -608,32 +608,6 @@ const App: React.FC = () => {
     if (!fileList || fileList.length === 0) return;
     
     const remainingSlots = 7 - pendingMedia.length;
-    if (remainingSlots <= 0) {
-      alert("Limite de 7 mídias atingido.");
-      return;
-    }
-
-    const files = Array.from(fileList).slice(0, remainingSlots);
-    const loadedMedia: MediaFile[] = [];
-    let processedCount = 0;
-    files.forEach((file: File) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        loadedMedia.push({ url: reader.result as string, type: 'image' });
-        processedCount++;
-        if (processedCount === files.length) {
-          setPendingMedia(prev => [...prev, ...loadedMedia]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-
-    e.target.value = '';
-  };
-
-  const handleAddPost = () => {
-    if (pendingMedia.length === 0) {
-      alert("Adicione uma imagem.");
       return;
     }
     const newPost: GalleryItem = {
