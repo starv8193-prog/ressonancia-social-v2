@@ -167,10 +167,22 @@ export async function searchUsers(query: string): Promise<EchoProfile[]> {
       return [];
     }
 
+    // Verificar se é busca por email (@)
+    const isEmailSearch = query.includes('@');
+    
+    let searchQuery;
+    if (isEmailSearch) {
+      // Busca exata por email
+      searchQuery = `email.eq.${query}`;
+    } else {
+      // Busca por nome ou bio
+      searchQuery = `name.ilike.%${query}%,bio.ilike.%${query}%`;
+    }
+
     const { data, error } = await supabase
       .from('users')
       .select('id, name, bio, avatar_url, is_public, avatar_color')
-      .or(`name.ilike.%${query}%,bio.ilike.%${query}%`)
+      .or(searchQuery)
       .limit(20);
 
     if (error) {
