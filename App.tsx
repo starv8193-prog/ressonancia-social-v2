@@ -594,7 +594,10 @@ const App: React.FC = () => {
     
     // Salvar no servidor se autenticado
     if (authState.user) {
-      await updateProfile(authState.user.id, { name: tempProfile.name, bio: tempProfile.bio });
+      await updateUserProfile(authState.user.id, {
+        name: tempProfile.name,
+        bio: tempProfile.bio
+      });
     }
     
     setIsEditingProfile(false);
@@ -666,9 +669,9 @@ const App: React.FC = () => {
         relatedEchoes: [],
       };
       
-      // Salvar no histórico do usuário
+      // Salvar no Supabase
       if (authState.user) {
-        await addToHistory(authState.user.id, newItem);
+        await addResonanceHistory(authState.user.id, newItem);
         await incrementResonanceCount(authState.user.id);
       }
       
