@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { processResonance } from './services/geminiService';
 import { validateToken, logout } from './services/authService';
-import { loadUserData, saveUserData, updateProfile, updateSettings, addToHistory, incrementResonanceCount } from './services/userDataService';
+import { loadUserData, saveUserData, updateProfile, updateSettings, addToHistory, incrementResonanceCount, searchUsers, getUserProfile, registerUserProfile } from './services/userDataService';
 import { HistoryItem, UserProfile, UserSettings, EchoProfile, GalleryItem, Comment, MediaFile, PremiumSettings, Dynasty, DynastyRole, DynastyMessage, Group, Participation, AuthUser, AuthState, UserData } from './types';
 import ResonanceVisualizer from './components/ResonanceVisualizer';
 import LoginForm from './components/LoginForm';
@@ -157,6 +157,19 @@ const App: React.FC = () => {
       const response = await loadUserData(userData.id);
       if (response.success && response.data) {
         setUserData(response.data);
+        
+        // Registrar perfil no banco global para busca
+        const userProfile: EchoProfile = {
+          id: userData.id,
+          name: response.data.profile.name,
+          bio: response.data.profile.bio,
+          isPublic: response.data.settings.isPublic,
+          avatarColor: response.data.profile.premiumSettings?.profileColor || '#ffffff',
+          avatarUrl: response.data.profile.avatarUrl,
+          gallery: response.data.profile.gallery
+        };
+        
+        await registerUserProfile(userData.id, userProfile);
       }
     } catch (error) {
       console.error('Error loading user data on login:', error);
@@ -259,9 +272,32 @@ const App: React.FC = () => {
     );
   }, [participations, participationSearch]);
 
-  const searchResults = useMemo(() => {
-    return []; 
-  }, [userSearch]);
+  const [searchResults, setSearchResults] = useState<EchoProfile[]>([]);
+
+  // Função de busca de usuários
+  const handleUserSearch = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    
+    try {
+      const results = await searchUsers(query);
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      setSearchResults([]);
+    }
+  }, []);
+
+  // Debounce para busca
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleUserSearch(userSearch);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [userSearch, handleUserSearch]);
 
   const [settings, setSettings] = useState<UserSettings>(() => {
     const saved = localStorage.getItem('resonance_settings');
@@ -809,12 +845,33 @@ const App: React.FC = () => {
           <div className="w-full max-w-2xl mx-auto space-y-8 fade-in">
             <input 
               type="text" 
-              placeholder="Pesquisar..." 
+              placeholder="Pesquisar usuários..." 
               value={userSearch}
               onChange={(e) => setUserSearch(e.target.value)}
               className="w-full bg-neutral-900/50 border border-white/5 rounded-full py-4 px-6 text-xs md:text-sm focus:outline-none placeholder:text-neutral-700"
             />
-            {feedItems.length === 0 ? <p className="text-center py-20 text-neutral-700 italic">O fluxo global está em silêncio.</p> : feedItems.map(item => (
+            
+            {/* Resultados da busca */}
+            {userSearch && searchResults.length > 0 && (
+              <div className="space-y-4 mb-8">
+                <h3 className="text-xs md:text-sm uppercase tracking-[0.3em] text-neutral-500 mb-4">Resultados da Busca</h3>
+                {searchResults.map(user => (
+                  <div key={user.id} className="bg-neutral-900/30 border border-white/5 rounded-2xl p-6 flex items-center gap-4 hover:border-white/10 transition-all cursor-pointer">
+                    <div 
+                      className="w-12 h-12 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: user.avatarColor }}
+                    ></div>
+                    <div className="flex-grow">
+                      <h4 className="text-sm font-bold text-white mb-1">{user.name}</h4>
+                      <p className="text-xs text-neutral-400">{user.bio}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {feedItems.length === 0 && !userSearch ? <p className="text-center py-20 text-neutral-700 italic">O fluxo global está em silêncio.</p> : 
+             feedItems.map(item => (
               <div key={item.id} onClick={() => openGalleryItem(item)} className="bg-neutral-900/20 border border-white/5 rounded-[2rem] overflow-hidden cursor-pointer hover:border-white/10 transition-all">
                 <div className="p-6 flex items-center gap-4"><div className="w-8 h-8 rounded-xl bg-neutral-800"></div><span className="text-[10px] md:text-xs font-bold tracking-widest">{item.authorName}</span></div>
                 <img src={item.media[0].url} className="w-full object-cover aspect-square" alt="Post" />

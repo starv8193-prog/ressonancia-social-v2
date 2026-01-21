@@ -22,6 +22,34 @@ export interface UserDataResponse {
 // Mock database para simular persistência
 const mockDatabase: Record<string, UserData> = {};
 
+// Mock database global de perfis para busca
+const globalProfiles: Record<string, EchoProfile> = {
+  'user1': {
+    id: 'user1',
+    name: 'Consciência_Alfa',
+    bio: 'Explorador das frequências primárias.',
+    isPublic: true,
+    avatarColor: '#3b82f6',
+    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop'
+  },
+  'user2': {
+    id: 'user2',
+    name: 'Consciência_Beta',
+    bio: 'Sintetizador de padrões emergentes.',
+    isPublic: true,
+    avatarColor: '#10b981',
+    avatarUrl: 'https://images.unsplash.com/photo-1494790108755-2616b332c1ca?w=200&h=200&fit=crop'
+  },
+  'user3': {
+    id: 'user3',
+    name: 'Consciência_Gama',
+    bio: 'Observador de ressonâncias coletivas.',
+    isPublic: true,
+    avatarColor: '#f59e0b',
+    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop'
+  }
+};
+
 export async function saveUserData(userId: string, userData: Partial<UserData>): Promise<UserDataResponse> {
   try {
     // Simulação de salvamento no servidor
@@ -218,5 +246,63 @@ export async function deleteUserData(userId: string): Promise<UserDataResponse> 
       success: false,
       error: 'Erro ao excluir dados do usuário'
     };
+  }
+}
+
+export async function searchUsers(query: string): Promise<EchoProfile[]> {
+  try {
+    // Simulação de busca de usuários
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    if (!query.trim()) {
+      return Object.values(globalProfiles);
+    }
+    
+    const lowerQuery = query.toLowerCase();
+    return Object.values(globalProfiles).filter(user => 
+      user.name.toLowerCase().includes(lowerQuery) ||
+      user.bio.toLowerCase().includes(lowerQuery)
+    );
+  } catch (error) {
+    console.error('Error searching users:', error);
+    return [];
+  }
+}
+
+export async function getUserProfile(userId: string): Promise<EchoProfile | null> {
+  try {
+    // Buscar no banco global primeiro
+    if (globalProfiles[userId]) {
+      return globalProfiles[userId];
+    }
+    
+    // Se não encontrar, buscar nos dados salvos
+    const userData = mockDatabase[userId];
+    if (userData?.profile) {
+      return {
+        id: userId,
+        name: userData.profile.name,
+        bio: userData.profile.bio,
+        isPublic: userData.settings.isPublic,
+        avatarColor: userData.profile.premiumSettings?.profileColor || '#ffffff',
+        avatarUrl: userData.profile.avatarUrl,
+        gallery: userData.profile.gallery
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting user profile:', error);
+    return null;
+  }
+}
+
+// Adicionar perfil atual ao banco global quando usuário faz login
+export async function registerUserProfile(userId: string, profile: EchoProfile): Promise<void> {
+  try {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    globalProfiles[userId] = profile;
+  } catch (error) {
+    console.error('Error registering user profile:', error);
   }
 }
