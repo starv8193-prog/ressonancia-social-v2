@@ -603,29 +603,63 @@ const App: React.FC = () => {
     setIsEditingProfile(false);
   };
 
+  const handleAddPost = async () => {
+    if (!newPostCaption.trim() || pendingMedia.length === 0) {
+      alert("Adicione pelo menos uma mídia e uma legenda.");
+      return;
+    }
+
+    if (authState.user) {
+      const newPost: GalleryItem = {
+        id: crypto.randomUUID(),
+        media: pendingMedia,
+        caption: newPostCaption || "Fluxo de consciência.",
+        comments: [],
+        timestamp: Date.now(),
+        authorName: profile.name
+      };
+
+      // Salvar no Supabase
+      await supabaseService.addGalleryItem(authState.user.id, newPost);
+      
+      // Atualizar estado local
+      setProfile(prev => ({
+        ...prev,
+        gallery: [newPost, ...prev.gallery]
+      }));
+
+      // Limpar formulário
+      setNewPostCaption('');
+      setPendingMedia([]);
+      setIsPosting(false);
+    }
+  };
+
   const handleGalleryFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = e.currentTarget.files;
     if (!fileList || fileList.length === 0) return;
     
     const remainingSlots = 7 - pendingMedia.length;
+    if (remainingSlots <= 0) {
+      alert("Limite de 7 mídias atingido.");
       return;
     }
-    const newPost: GalleryItem = {
-      id: crypto.randomUUID(),
-      media: pendingMedia,
-      caption: newPostCaption || "Fluxo de consciência.",
-      comments: [],
-      timestamp: Date.now(),
-      authorName: profile.name
-    };
 
-    if (activeTab === 'Dinastia' && profile.createdDynasty && dynastyTab === 'Feed') {
-      setProfile(p => ({ ...p, createdDynasty: p.createdDynasty ? { ...p.createdDynasty, feed: [newPost, ...p.createdDynasty.feed] } : undefined }));
-    } else {
-      setProfile(p => ({ ...p, gallery: [newPost, ...p.gallery] }));
-    }
-
-    setIsPosting(false);
+    const filesToAdd = Array.from(fileList).slice(0, remainingSlots);
+    const loadedMedia: MediaFile[] = [];
+    let processedCount = 0;
+    
+    filesToAdd.forEach((file: File) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        loadedMedia.push({ url: reader.result as string, type: 'image' });
+        processedCount++;
+        if (processedCount === filesToAdd.length) {
+          setPendingMedia(prev => [...prev, ...loadedMedia]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
     setPendingMedia([]);
     setNewPostCaption('');
   };
